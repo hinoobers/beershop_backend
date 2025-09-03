@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<script>
+    let cart = [];
+    let savedCart = localStorage.getItem('cart');
+    if (savedCart) {
+        cart = JSON.parse(savedCart);
+        renderCart();
+    } else {
+        cart = [];
+    }
+    function saveCart() {
+        localStorage.setItem('cart', JSON.stringify(cart));
+    }
+</script>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Beer Shop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h1>Beer Shop</h1>
+    </header>
+    <div class="container">
+        <section>
+            <h2>Products</h2>
+            <div class="products" id="products"></div>
+        </section>
+        <section class="cart">
+            <h2>Cart</h2>
+            <ul class="cart-list" id="cart-list"></ul>
+            <div class="total" id="cart-total"></div>
+            <button id="checkout-btn" style="display: none; margin-top:1em; background:#4caf50; color:#fff; border:none; padding:0.7em 1.5em; border-radius:4px; cursor:pointer;">Checkout</button>
+        </section>
+    </div>
+    <script>
+        const checkoutBtn = document.getElementById('checkout-btn');
+        let products = [];
+
+        fetch("fetchProducts")
+            .then(response => response.json())
+            .then(data => {
+                products = data;
+                renderProducts();
+            });
+
+        function renderProducts() {
+            const productsDiv = document.getElementById('products');
+            productsDiv.innerHTML = '';
+            products.forEach(product => {
+                const div = document.createElement('div');
+                div.className = 'product';
+                div.innerHTML = `
+                    <img src="${product.image_url}" alt="${product.name}">
+                    <h3>${product.name}</h3>
+                    <p>€${product.price.toFixed(2)}</p>
+                    <button onclick="addToCart(${product.id})">Add to Cart</button>
+                `;
+                productsDiv.appendChild(div);
+            });
+        }
+
+        function addToCart(productId) {
+            checkoutBtn.style.display = 'block';
+            const item = cart.find(i => i.id === productId);
+            if (item) {
+                item.qty += 1;
+            } else {
+                const product = products.find(p => p.id === productId);
+                cart.push({ ...product, qty: 1 });
+            }
+            renderCart();
+        }
+
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            if (cart.length === 0) {
+                checkoutBtn.style.display = 'none';
+            }
+            renderCart();
+        }
+
+        function renderCart() {
+            const cartList = document.getElementById('cart-list');
+            cartList.innerHTML = '';
+            let total = 0;
+            cart.forEach(item => {
+                total += item.price * item.qty;
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    ${item.name} x${item.qty} - €${(item.price * item.qty).toFixed(2)}
+                    <button onclick="removeFromCart(${item.id})">Remove</button>
+                `;
+                cartList.appendChild(li);
+            });
+            document.getElementById('cart-total').textContent = `Total: €${total.toFixed(2)}`;
+            if (cart.length > 0) {
+                checkoutBtn.style.display = 'block';
+            }
+            saveCart();
+        }
+
+        checkoutBtn.addEventListener("click", () => {
+            fetch("purchaseProduct", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({products: cart})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    alert("Purchase failed.");
+                }
+            });
+        });
+
+        renderProducts();
+        renderCart();
+    </script>
+</body>
+</html>
