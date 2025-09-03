@@ -17,5 +17,10 @@
   "bugs": {
     "url": "https://github.com/hinoobers/beershop_backend/issues"
   },
-  "homepage": "https://github.com/hinoobers/beershop_backend#readme"
+  "homepage": "https://github.com/hinoobers/beershop_backend#readme",
+  "dependencies": {
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "mysql2": "^3.14.4"
+  }
 }
