@@ -19,6 +19,9 @@ app.use((req, res, next) => {
 app.get("/fetchProducts", require("./endpoints/fetchProducts.js"));
 app.post("/purchaseProduct", require("./endpoints/purchaseProduct.js"));
 app.get("/afterPayment", require("./endpoints/afterPayment.js"));
+app.get("/fetchOrders", require("./endpoints/fetchOrders.js"));
+app.post("/completeOrder", require("./endpoints/completeOrder.js"));
+app.post("/login", require("./endpoints/login.js").login);
 
 app.get("/testsession", (req, res) => {
     res.json({ sessionId: req.cookies.session });

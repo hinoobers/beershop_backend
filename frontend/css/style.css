@@ -10,8 +10,20 @@ header {
     color: #fff;
     padding: 1em;
     text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
+header a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+header a:hover {
+    text-decoration: underline;
+}
 .container {
     max-width: 900px;
     margin: 2em auto;
