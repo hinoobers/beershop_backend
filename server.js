@@ -17,6 +17,8 @@ app.use((req, res, next) => {
 });
 
 app.get("/fetchProducts", require("./endpoints/fetchProducts.js"));
+app.get("/fetchProduct/:id", require("./endpoints/fetchProduct.js"));
+
 app.post("/purchaseProduct", require("./endpoints/purchaseProduct.js"));
 app.get("/afterPayment", require("./endpoints/afterPayment.js"));
 app.get("/fetchOrders", require("./endpoints/fetchOrders.js"));

@@ -1,5 +1,6 @@
 const stripe = require("../stripe");
 const pool = require("../database");
+const {sendEmail} = require("../emailer");
 
 module.exports = async (req, res) => {
     const sessionId = req.query.session_id;
@@ -22,14 +23,31 @@ module.exports = async (req, res) => {
             }));
 
             const address = session.collected_information.shipping_details.address;
+            const email = session.customer_details.email.trim();
 
-            pool.query("INSERT INTO orders (products, total, address) VALUES (?, ?, ?)", [JSON.stringify(items), session.amount_total, JSON.stringify(address)], (error, results) => {
+            pool.query("INSERT INTO orders (email, products, total, address) VALUES (?, ?, ?, ?)", [email, JSON.stringify(items), session.amount_total, JSON.stringify(address)], (error, results) => {
                 if (error) {
                     console.error("Error inserting order:", error);
                     return res.status(500).json({ error: "Internal Server Error" });
                 }
 
-                res.redirect("/thankYou.html");
+            let productsList = "";
+            try {
+                if (Array.isArray(items)) {
+                    productsList = items.map(p => `- ${p.name} x${p.quantity}`).join('\n');
+                } else {
+                    productsList = JSON.stringify(items);
+                }
+            } catch (e) {
+                productsList = items;
+            }
+            sendEmail(
+                email,
+                `Order confirmation ID:${results.insertId}`,
+                `We have received your order.\nYour order:\n${productsList}`
+            );
+
+            res.redirect("/thankYou.html");
             });
         } else {
             return res.status(404).json({ error: "Session not found" });

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Beer shop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+   <header>
+        <h1>Beer Shop</h1>
+        <a href="index.html">Back to home?</a>
+    </header>
+
+    <main class="container">
+        <section class="product-details">
+            <div class="product-image">
+                <img id="product-image" width="400" height="300" alt="Product Name">
+            </div>
+            <div class="product-info">
+                <h2 class="product-title" id="product-title">Product Name</h2>
+                <p class="product-description" id="product-desc">
+                    This is a detailed description of the product. It highlights features, benefits, and specifications.
+                </p>
+                <div class="product-price" id="product-price">$49.99</div>
+                <button class="btn-primary" id="add-cart">Add to Cart</button>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        function addToCart(product) {
+            let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+            const item = cart.find(i => i.id === product.id);
+            if (item) {
+                item.qty += 1;
+            } else {
+                cart.push({ ...product, qty: 1 });
+            }
+
+            localStorage.setItem("cart", JSON.stringify(cart));
+        }
+        fetch("/fetchProduct/" + new URLSearchParams(document.location.search).get("id"), {
+            method: "GET"
+        }).then(d => d.json()).then(d => {
+            document.getElementById("product-image").src = d.image_url
+            document.getElementById("product-title").textContent = d.name
+            document.getElementById("product-desc").textContent = d.description
+            document.getElementById("product-price").textContent = d.price + "$"
+            document.getElementById("add-cart").addEventListener("click", () => {
+                addToCart(d)
+                window.location.href = "index.html"
+            });
+        })
+    </script>
+</body>
+</html>
