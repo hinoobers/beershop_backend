@@ -53,6 +53,9 @@ document.addEventListener("DOMContentLoaded", function() {
         window.location.href = "login.html";
     });
 
+    // for modal
+    const listeners = [];
+
     fetch("/fetchProducts", {
         method: "GET",
     }).then(response => response.json())
@@ -80,7 +83,10 @@ document.addEventListener("DOMContentLoaded", function() {
                 document.getElementById("productPrice").value = product.price;
 
                 const saveBtn =document.getElementById("submitProductBtn");
-                saveBtn.addEventListener("click", () => {
+                listeners.forEach(l => {
+                    saveBtn.removeEventListener(l);
+                })
+                const listener = () => {
                     fetch(`/updateProduct/${product.id}`, {
                         method: "PUT",
                         headers: { 
@@ -99,7 +105,9 @@ document.addEventListener("DOMContentLoaded", function() {
                             window.location.reload();
                         }
                     });
-                });
+                }
+                saveBtn.addEventListener("click", listener);
+                listeners.push(listener);
 
             };
             actionCell.appendChild(editButton);
@@ -133,7 +141,10 @@ document.addEventListener("DOMContentLoaded", function() {
         modal.classList.add("active");
 
         const saveBtn =document.getElementById("submitProductBtn");
-        saveBtn.addEventListener("click", () => {
+        listeners.forEach(l => {
+            saveBtn.removeEventListener(l);
+        })
+        const listener = () => {
             fetch(`/addProduct`, {
                 method: "POST",
                 headers: { 
@@ -152,6 +163,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     window.location.reload();
                 }
             });
-        });
+        }
+        saveBtn.addEventListener("click", listener);
+        listeners.push(listener);
     });
 });
