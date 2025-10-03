@@ -39,6 +39,59 @@
             border-bottom: 1px solid #e0e0e0;
             text-align: left;
         }
+
+        td.actioncell {
+            display: flex;
+            gap: 8px;
+        }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.4);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: #fff;
+            padding: 32px 28px;
+            border-radius: 8px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+            min-width: 340px;
+            max-width: 95vw;
+        }
+        .modal-content h2 {
+            margin-top: 0;
+            margin-bottom: 18px;
+            color: #222;
+        }
+        .modal-content label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+        .modal-content input,
+        .modal-content textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+        .modal-content .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        /* End Modal styles */
         th {
             background: #f1f1f1;
             color: #444;
@@ -60,6 +113,8 @@
             background: #aaa;
             cursor: not-allowed;
         }
+
+
     </style>
 </head>
 <body>
@@ -67,6 +122,31 @@
         <h1>Beer Shop</h1>
         <a href="index.html">Back to home?</a>
     </header>
+
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <h2>Add / Edit Product</h2>
+            <form id="productForm">
+                <label for="productName">Name</label>
+                <input type="text" id="productName" name="name" required>
+
+                <label for="productDescription">Description</label>
+                <textarea id="productDescription" name="description" required></textarea>
+
+                
+                <label for="productImage">Image URL</label>
+                <input type="url" id="productImage" name="description" required></input>
+
+                <label for="productPrice">Price</label>
+                <input type="number" id="productPrice" name="price" step="0.01" required>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn" id="closeModalBtn">Cancel</button>
+                    <button type="submit" class="btn" id="submitProductBtn">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <div class="container">
         <h1>Orders</h1>
         <table id="ordersTable">
@@ -84,5 +164,26 @@
             </tbody>
         </table>
     </div>
+
+    <div class="container">
+        <h1>Products</h1>
+        <table id="productsTable">
+            <thead>
+                <tr>
+                    <th>Product ID</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Price</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Orders will be loaded here -->
+            </tbody>
+        </table>
+
+        <button class="btn" id="addProductBtn">Add product</button>
+    </div>
+
 </body>
 </html>

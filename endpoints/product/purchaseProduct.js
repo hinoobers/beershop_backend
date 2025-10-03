@@ -1,4 +1,4 @@
-const stripe = require("../stripe");
+const stripe = require("../../stripe");
 
 module.exports = async (req, res) => {
     const { products } = req.body;

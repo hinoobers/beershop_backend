@@ -1,6 +1,6 @@
-const pool = require("../database.js");
-const isAdmin = require("./login.js").isAdmin;
-const {sendEmail} = require("../emailer.js");
+const pool = require("../../database.js");
+const isAdmin = require("../login.js").isAdmin;
+const {sendEmail} = require("../../emailer.js");
 
 module.exports = (req, res) => {
     const token = req.headers["authorization"];

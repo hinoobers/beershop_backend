@@ -52,4 +52,106 @@ document.addEventListener("DOMContentLoaded", function() {
     }).catch(err => {
         window.location.href = "login.html";
     });
+
+    fetch("/fetchProducts", {
+        method: "GET",
+    }).then(response => response.json())
+    .then(data => {
+        const ordersTable = document.getElementById("productsTable").getElementsByTagName('tbody')[0];
+        data.forEach(product => {
+            const row = ordersTable.insertRow();
+            row.insertCell(0).innerText = product.id;
+            row.insertCell(1).innerText = product.name;
+            row.insertCell(2).innerText = product.description;
+            row.insertCell(3).innerText = product.price;
+            const actionCell = row.insertCell(4);
+            actionCell.className = "actioncell";
+
+            const editButton = document.createElement("button");
+            editButton.classList.add("btn");
+            editButton.innerText = "Edit";
+            editButton.onclick = function() {
+                const modal = document.getElementById("productModal");
+                modal.classList.add("active");
+
+                document.getElementById("productName").value = product.name;
+                document.getElementById("productDescription").value = product.description;
+                document.getElementById("productImage").value = product.image_url;
+                document.getElementById("productPrice").value = product.price;
+
+                const saveBtn =document.getElementById("submitProductBtn");
+                saveBtn.addEventListener("click", () => {
+                    fetch(`/updateProduct/${product.id}`, {
+                        method: "PUT",
+                        headers: { 
+                            "Content-Type": "application/json",
+                            "Authorization": localStorage.getItem("admin-token")
+                        },
+                        body: JSON.stringify({
+                            name: document.getElementById("productName").value,
+                            description: document.getElementById("productDescription").value,
+                            image_url: document.getElementById("productImage").value,
+                            price: document.getElementById("productPrice").value
+                        })
+                    }).then((r) => {
+                        if (r.ok) {
+                            alert("Product updated!");
+                            window.location.reload();
+                        }
+                    });
+                });
+
+            };
+            actionCell.appendChild(editButton);
+
+            const removeButton = document.createElement("button");
+            removeButton.classList.add("btn");
+            removeButton.innerText = "Remove";
+            removeButton.onclick = function() {
+                fetch(`/deleteProduct/${product.id}`, {
+                    method: "DELETE",
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": localStorage.getItem("admin-token")
+                    }
+                }).then((r) => {
+                    if (r.ok) {
+                        alert("Product deleted!");
+                        window.location.reload();
+                    }
+                });
+            };
+            actionCell.appendChild(removeButton);
+        });
+    }).catch(err => {
+        console.log(err);
+        window.location.href = "login.html";
+    });
+
+    document.getElementById("addProductBtn").addEventListener("click", () => {
+        const modal = document.getElementById("productModal");
+        modal.classList.add("active");
+
+        const saveBtn =document.getElementById("submitProductBtn");
+        saveBtn.addEventListener("click", () => {
+            fetch(`/addProduct`, {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": localStorage.getItem("admin-token")
+                },
+                body: JSON.stringify({
+                    name: document.getElementById("productName").value,
+                    description: document.getElementById("productDescription").value,
+                    image_url: document.getElementById("productImage").value,
+                    price: document.getElementById("productPrice").value
+                })
+            }).then((r) => {
+                if (r.ok) {
+                    alert("Product added!");
+                    window.location.reload();
+                }
+            });
+        });
+    });
 });

@@ -1,12 +1,16 @@
-const pool = require("../database.js");
+const pool = require("../../database.js");
+
 
 module.exports = (req, res) => {
-    pool.query("SELECT * FROM products", (error, results) => {
+    const id = req.params.id;
+
+    pool.query("SELECT * FROM products WHERE id=?", [id], (error, results) => {
         if (error) {
             console.error(error);
             res.status(500).json({ error: "Internal Server Error" });
             return;
         }
-        res.json(results);
+
+        res.send(results[0]);
     });
-}
+};

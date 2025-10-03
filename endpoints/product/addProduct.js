@@ -1,5 +1,5 @@
-const pool = require("../database.js");
-const isAdmin = require("./login.js").isAdmin;
+const pool = require("../../database.js");
+const isAdmin = require("../login.js").isAdmin;
 
 module.exports = (req, res) => {
     const token = req.headers["authorization"];
@@ -8,12 +8,14 @@ module.exports = (req, res) => {
         return;
     }
 
-    pool.query("SELECT * FROM orders", (error, results) => {
+    const {name, description, image_url, price} = req.body;
+
+    pool.query("INSERT INTO products (name, description, image_url, price) VALUES (?, ?, ?, ?)", [name, description, image_url, price], (error, results) => {
         if (error) {
             console.error(error);
             res.status(500).json({ error: "Internal Server Error" });
             return; 
         }
-        res.json(results);
+        res.json({success: true});
     });
 }

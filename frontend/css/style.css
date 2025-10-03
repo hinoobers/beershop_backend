@@ -104,6 +104,10 @@ header a:hover {
     margin-bottom: 0.5em;
 }
 
+.cart-list li div button{
+    font-weight: bold;
+}
+
 .cart-list button {
     background: #e53935;
     color: #fff;
@@ -123,6 +127,10 @@ header a:hover {
     padding: 0.7em 1.5em;
     border-radius: 4px;
     cursor: pointer;
+}
+
+.checkout-btn {
+    display: none;
 }
 
 .checkout-btn:hover {

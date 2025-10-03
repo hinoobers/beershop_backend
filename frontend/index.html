@@ -1,17 +1,4 @@
 <!DOCTYPE html>
-<script>
-    let cart = [];
-    let savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-        cart = JSON.parse(savedCart);
-        renderCart();
-    } else {
-        cart = [];
-    }
-    function saveCart() {
-        localStorage.setItem('cart', JSON.stringify(cart));
-    }
-</script>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -39,6 +26,7 @@
     <script>
         const checkoutBtn = document.getElementById('checkout-btn');
         let products = [];
+        let cart = [];
 
         fetch("fetchProducts")
             .then(response => response.json())
@@ -46,6 +34,29 @@
                 products = data;
                 renderProducts();
             });
+
+        function renderCart() {
+            const cartList = document.getElementById('cart-list');
+            cartList.innerHTML = '';
+            let total = 0;
+            cart.forEach(item => {
+                total += item.price * item.qty;
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    ${item.name} x${item.qty} - €${(item.price * item.qty).toFixed(2)}
+                    <div class='h'>
+                        <button onclick="addToCart(${item.id})">+</button>
+                        <button onclick="removeFromCart(${item.id})">-</button>
+                    </div>
+                `;
+                cartList.appendChild(li);
+            });
+            document.getElementById('cart-total').textContent = `Total: €${total.toFixed(2)}`;
+            if (cart.length > 0) {
+                checkoutBtn.style.display = 'block';
+            }
+            saveCart();
+        }
 
         function renderProducts() {
             const productsDiv = document.getElementById('products');
@@ -67,6 +78,7 @@
         }
 
         function addToCart(productId) {
+            console.log("Add to cart called!")
             checkoutBtn.style.display = 'block';
             const item = cart.find(i => i.id === productId);
             if (item) {
@@ -79,50 +91,51 @@
         }
 
         function removeFromCart(productId) {
-            cart = cart.filter(item => item.id !== productId);
+            const item = cart.find(i => i.id === productId);
+            if (item) {
+                item.qty -= 1;
+                if (item.qty <= 0) {
+                    cart = cart.filter(i => i.id !== productId);
+                }
+            }
             if (cart.length === 0) {
                 checkoutBtn.style.display = 'none';
             }
             renderCart();
         }
 
-        function renderCart() {
-            const cartList = document.getElementById('cart-list');
-            cartList.innerHTML = '';
-            let total = 0;
-            cart.forEach(item => {
-                total += item.price * item.qty;
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    ${item.name} x${item.qty} - €${(item.price * item.qty).toFixed(2)}
-                    <button onclick="removeFromCart(${item.id})">Remove</button>
-                `;
-                cartList.appendChild(li);
-            });
-            document.getElementById('cart-total').textContent = `Total: €${total.toFixed(2)}`;
-            if (cart.length > 0) {
-                checkoutBtn.style.display = 'block';
-            }
-            saveCart();
-        }
-
         checkoutBtn.addEventListener("click", () => {
-            fetch("purchaseProduct", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({products: cart})
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.url) {
-                    window.location.href = data.url;
-                } else {
-                    alert("Purchase failed.");
-                }
-            });
+            if(cart.length === 0) {
+                alert("Your cart is empty!");
+            } else {
+                fetch("purchaseProduct", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({products: cart})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.url) {
+                        window.location.href = data.url;
+                    } else {
+                        alert("Purchase failed.");
+                    }
+                });
+            }
         });
+
+        let savedCart = localStorage.getItem('cart');
+        if (savedCart) {
+            cart = JSON.parse(savedCart);
+            renderCart();
+        } else {
+            cart = [];
+        }
+        function saveCart() {
+            localStorage.setItem('cart', JSON.stringify(cart));
+        }
 
         renderProducts();
         renderCart();
