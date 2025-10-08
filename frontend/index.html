@@ -5,10 +5,16 @@
     <title>Beer Shop</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/style.css">
+    <script src="scripts/global.js" defer></script>
 </head>
 <body>
     <header>
         <h1>Beer Shop</h1>
+        <select id="currency-select" onchange="changeCurrency()">
+            <option value="EUR">EUR (€)</option>
+            <option value="USD">USD ($)</option>
+            <option value="GBP">GBP (£)</option>
+        </select>
         <a href="admin.html">Admin?</a>
     </header>
     <div class="container">

@@ -1,9 +1,11 @@
 const express = require("express");
 const app = express();
 const { v4: uuidv4 } = require("uuid");
+const cors = require("cors");
 
 const pool = require("./database.js");
 
+app.use(cors());
 app.use(express.json());
 app.use(express.static("frontend"));
 app.use((req, res, next) => {
@@ -32,7 +34,7 @@ app.get("/testsession", (req, res) => {
     res.json({ sessionId: req.cookies.session });
 });
 
-app.listen(3000, () => {
+app.listen(3001, () => {
     console.log("Bäckend jookseb pordi 3000 peal!")
     pool.query("SELECT * FROM products", (error, results) => {
         if (error) {

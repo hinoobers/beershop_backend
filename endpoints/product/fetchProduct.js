@@ -11,6 +11,10 @@ module.exports = (req, res) => {
             return;
         }
 
+        if (results.length === 0) {
+            res.status(404).json({ error: "Product not found" });
+            return;
+        }
         res.send(results[0]);
     });
 };
