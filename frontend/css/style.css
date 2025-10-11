@@ -141,3 +141,23 @@ header a:hover {
     font-weight: bold;
     margin-top: 1em;
 }
+
+/* Currency select styles */
+header select {
+    padding: 0.5em 1em;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 1em;
+    color: #333;
+    margin: 0 0.5em;
+    outline: none;
+    transition: border-color 0.2s;
+}
+header select:focus {
+    border-color: #2d8f2d;
+}
+header select option {
+    background: #fff;
+    color: #333;
+}
