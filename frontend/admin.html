@@ -119,8 +119,7 @@
 </head>
 <body>
     <header>
-        <h1>Beer Shop</h1>
-        <a href="index.html">Back to home?</a>
+        <h1><a href="index.html">Beer Shop</a></h1>
     </header>
 
     <div id="productModal" class="modal">
@@ -163,6 +162,11 @@
                 <!-- Orders will be loaded here -->
             </tbody>
         </table>
+        <div style="display:flex;justify-content:center;align-items:center;margin-top:16px;gap:12px;">
+            <button class="btn" id="ordersPrevBtn">Previous</button>
+            <span id="ordersPageInfo"></span>
+            <button class="btn" id="ordersNextBtn">Next</button>
+        </div>
     </div>
 
     <div class="container">
@@ -178,10 +182,14 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Orders will be loaded here -->
+                <!-- Products will be loaded here -->
             </tbody>
         </table>
-
+        <div style="display:flex;justify-content:center;align-items:center;margin-top:16px;gap:12px;">
+            <button class="btn" id="productsPrevBtn">Previous</button>
+            <span id="productsPageInfo"></span>
+            <button class="btn" id="productsNextBtn">Next</button>
+        </div>
         <button class="btn" id="addProductBtn">Add product</button>
     </div>
 

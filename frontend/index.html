@@ -11,9 +11,9 @@
     <header>
         <h1>Beer Shop</h1>
         <select id="currency-select" onchange="changeCurrency()">
-            <option value="EUR">EUR (€)</option>
-            <option value="USD">USD ($)</option>
-            <option value="GBP">GBP (£)</option>
+            <option value="EUR" tag="€">EUR (€)</option>
+            <option value="USD" tag="$">USD ($)</option>
+            <option value="GBP" tag="£">GBP (£)</option>
         </select>
         <a href="admin.html">Admin?</a>
     </header>
@@ -26,40 +26,51 @@
             <h2>Cart</h2>
             <ul class="cart-list" id="cart-list"></ul>
             <div class="total" id="cart-total"></div>
-            <button id="checkout-btn" class="checkout-btn">Checkout</button>
+            <button id="checkout-stripe-btn" class="checkout-btn">Checkout via Stripe</button>
+            <button id="checkout-paypal-btn" class="checkout-btn">Checkout via PayPal</button>
         </section>
     </div>
     <script>
-        const checkoutBtn = document.getElementById('checkout-btn');
+        const checkoutStripeBtn = document.getElementById('checkout-stripe-btn');
+        const checkoutPaypalBtn = document.getElementById('checkout-paypal-btn');
         let products = [];
         let cart = [];
 
-        fetch("fetchProducts")
+        fetch("fetchProducts?currency=" + localStorage.getItem('selectedCurrency'), { method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+         })
             .then(response => response.json())
             .then(data => {
-                products = data;
+                products = data.data;
                 renderProducts();
+                renderCart();
             });
 
         function renderCart() {
             const cartList = document.getElementById('cart-list');
             cartList.innerHTML = '';
             let total = 0;
+            let currencySymbol = '';
             cart.forEach(item => {
-                total += item.price * item.qty;
+                const product = products.find(p => p.id === item.productId);
+                console.log(product);
+                total += product.price.total * item.qty;
+                currencySymbol = product.price.currency;
                 const li = document.createElement('li');
                 li.innerHTML = `
-                    ${item.name} x${item.qty} - €${(item.price * item.qty).toFixed(2)}
+                    ${product.name} x${item.qty} - ${product.price.currency}${(product.price.total * item.qty).toFixed(2)}
                     <div class='h'>
-                        <button onclick="addToCart(${item.id})">+</button>
-                        <button onclick="removeFromCart(${item.id})">-</button>
+                        <button onclick="addToCart(${item.productId})">+</button>
+                        <button onclick="removeFromCart(${item.productId})">-</button>
                     </div>
                 `;
                 cartList.appendChild(li);
             });
-            document.getElementById('cart-total').textContent = `Total: €${total.toFixed(2)}`;
+            document.getElementById('cart-total').textContent = `Total: ${currencySymbol}${total.toFixed(2)}`;
             if (cart.length > 0) {
-                checkoutBtn.style.display = 'block';
+                Array.from(document.getElementsByClassName('checkout-btn')).forEach(btn => btn.style.display = 'block');
             }
             saveCart();
         }
@@ -73,7 +84,7 @@
                 div.innerHTML = `
                     <img src="${product.image_url}" alt="${product.name}">
                     <h3>${product.name}</h3>
-                    <p>€${product.price.toFixed(2)}</p>
+                    <p>${product.price.currency + "" + product.price.total}</p>
                     <div class="actions">
                         <button onclick="addToCart(${product.id})">Add to Cart</button>
                         <button onclick="window.location.href='/productPage.html?id=${product.id}'">View info</button>
@@ -85,32 +96,32 @@
 
         function addToCart(productId) {
             console.log("Add to cart called!")
-            checkoutBtn.style.display = 'block';
-            const item = cart.find(i => i.id === productId);
+            Array.from(document.getElementsByClassName('checkout-btn')).forEach(btn => btn.style.display = 'block');
+            const item = cart.find(i => i.productId === productId);
             if (item) {
                 item.qty += 1;
             } else {
                 const product = products.find(p => p.id === productId);
-                cart.push({ ...product, qty: 1 });
+                cart.push({ productId: productId, qty: 1 });
             }
             renderCart();
         }
 
         function removeFromCart(productId) {
-            const item = cart.find(i => i.id === productId);
+            const item = cart.find(i => i.productId === productId);
             if (item) {
                 item.qty -= 1;
                 if (item.qty <= 0) {
-                    cart = cart.filter(i => i.id !== productId);
+                    cart = cart.filter(i => i.productId !== productId);
                 }
             }
             if (cart.length === 0) {
-                checkoutBtn.style.display = 'none';
+                Array.from(document.getElementsByClassName('checkout-btn')).forEach(btn => btn.style.display = 'none');
             }
             renderCart();
         }
 
-        checkoutBtn.addEventListener("click", () => {
+        const checkoutlistener = (e) => {
             if(cart.length === 0) {
                 alert("Your cart is empty!");
             } else {
@@ -119,23 +130,29 @@
                     headers: {
                         "Content-Type": "application/json"
                     },
-                    body: JSON.stringify({products: cart})
+                    body: JSON.stringify({products: cart, paymentMethod: e.target.id === 'checkout-stripe-btn' ? 'stripe' : 'paypal'})
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.url) {
                         window.location.href = data.url;
                     } else {
+                        if(data.error) {
+                            alert("Purchase failed: " + data.error);
+                            return;
+                        }
                         alert("Purchase failed.");
                     }
                 });
             }
-        });
+        }
+
+        checkoutStripeBtn.addEventListener("click", checkoutlistener);
+        checkoutPaypalBtn.addEventListener("click", checkoutlistener);
 
         let savedCart = localStorage.getItem('cart');
         if (savedCart) {
             cart = JSON.parse(savedCart);
-            renderCart();
         } else {
             cart = [];
         }

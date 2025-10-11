@@ -3,7 +3,7 @@ const app = express();
 const { v4: uuidv4 } = require("uuid");
 const cors = require("cors");
 
-const pool = require("./database.js");
+const pool = require("./util/database.js");
 
 app.use(cors());
 app.use(express.json());
@@ -30,9 +30,6 @@ app.get("/fetchOrders", require("./endpoints/order/fetchOrders.js"));
 app.post("/completeOrder", require("./endpoints/order/completeOrder.js"));
 app.post("/login", require("./endpoints/login.js").login);
 
-app.get("/testsession", (req, res) => {
-    res.json({ sessionId: req.cookies.session });
-});
 
 app.listen(3001, () => {
     console.log("Bäckend jookseb pordi 3000 peal!")
