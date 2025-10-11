@@ -54,7 +54,7 @@ module.exports = async (req, res) => {
             },
             "redirect_urls": {
                 "return_url": "http://localhost:3001/afterPayment",
-                "cancel_url": "http://localhost:3001/cancel"
+                "cancel_url": "http://localhost:3001/"
             },
             "transactions": [{
                 "item_list": {
@@ -80,6 +80,8 @@ module.exports = async (req, res) => {
         return;
     }
 
+
+    let stripeTotal = 0;
     try {
         for (const product of products) {
             if (!product.productId || !product.qty) {
@@ -87,6 +89,7 @@ module.exports = async (req, res) => {
             }
 
             const dbProduct = await getProductById(product.productId);
+            stripeTotal += dbProduct.price * product.qty;
 
             const price = await stripe.prices.create({
                 unit_amount: dbProduct.price * 100,
@@ -106,7 +109,7 @@ module.exports = async (req, res) => {
         return res.status(500).json({ error: error.message });
     }
 
-    if(line_items.reduce((acc, item) => acc + (item.quantity * (item.price.unit_amount || 0)), 0) < process.env.MIN_PRICE_USD * 100) {
+    if(stripeTotal < process.env.MIN_PRICE_USD) {
         return res.status(400).json({ error: `Minimum order amount is $${process.env.MIN_PRICE_USD}` });
     }
 
