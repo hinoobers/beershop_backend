@@ -12,7 +12,29 @@ document.addEventListener("DOMContentLoaded", function() {
     let productsLimit = 10;
     let productsTotal = 0;
 
-   function loadOrders(page = 1) {
+    const Quill = window.Quill
+    const quill = new Quill("#productDescriptionEditor", {
+        theme: "snow",
+        placeholder: "Enter product description...",
+        modules: {
+        toolbar: [
+            ["bold", "italic", "underline", "strike"], // text styles
+            [{ list: "ordered" }, { list: "bullet" }], // lists
+            ["link", "blockquote", "code-block"], // extras
+            [{ header: [1, 2, 3, false] }], // headers
+            [{ align: [] }], // alignment
+            ["clean"], // clear formatting
+        ],
+        },
+    })
+
+    const form = document.getElementById("productForm")
+    form.addEventListener("submit", (e) => {
+        const hiddenInput = document.getElementById("productDescription")
+        hiddenInput.value = quill.root.innerHTML
+    })
+
+    function loadOrders(page = 1) {
     fetch(`/fetchOrders?page=${page}&limit=${ordersLimit}`, {
         headers: {
             "Authorization": localStorage.getItem("admin-token")
@@ -96,6 +118,56 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 }
 
+  function renderFields(container, fields) {
+    container.innerHTML = ""
+    fields.forEach((f, idx) => {
+      const row = document.createElement("div")
+      row.className = "field-row"
+      row.style.display = "flex"
+      row.style.gap = "8px"
+      row.style.marginBottom = "6px"
+
+      const labelInput = document.createElement("input")
+      labelInput.type = "text"
+      labelInput.placeholder = "Label"
+      labelInput.value = f.label || ""
+      labelInput.style.flex = "1"
+
+      const valueInput = document.createElement("input")
+      valueInput.type = "text"
+      valueInput.placeholder = "Value"
+      valueInput.value = f.value || ""
+      valueInput.style.flex = "2"
+
+      const removeBtn = document.createElement("button")
+      removeBtn.type = "button"
+      removeBtn.className = "btn"
+      removeBtn.style.background = "#c0392b"
+      removeBtn.innerText = "Remove"
+      removeBtn.onclick = () => {
+        fields.splice(idx, 1)
+        renderFields(container, fields)
+      }
+
+      row.appendChild(labelInput)
+      row.appendChild(valueInput)
+      row.appendChild(removeBtn)
+
+      container.appendChild(row)
+    })
+  }
+
+    function readFieldsFromContainer(container) {
+    const rows = Array.from(container.querySelectorAll(".field-row"))
+    const out = rows
+      .map((r) => {
+        const inputs = r.getElementsByTagName("input")
+        return { label: inputs[0].value.trim(), value: inputs[1].value.trim() }
+      })
+      .filter((f) => f.label.length > 0 || f.value.length > 0)
+    return out
+  }
+
     document.getElementById("ordersPrevBtn").addEventListener("click", () => {
         if (ordersPage > 1) loadOrders(ordersPage - 1);
     });
@@ -139,11 +211,22 @@ document.addEventListener("DOMContentLoaded", function() {
                     document.getElementById("productImage").value = product.image_url;
                     document.getElementById("productPrice").value = product.price.total;
 
+                    const fieldsContainer = document.getElementById("productFieldsContainer")
+                    let productFields = []
+                    try {
+                        productFields = product.fields ? JSON.parse(product.fields) : []
+                    } catch (e) {
+                        console.error("Error parsing product fields:", e)
+                        productFields = []
+                    }
+                    renderFields(fieldsContainer, productFields)
+
                     const saveBtn =document.getElementById("submitProductBtn");
                     listeners.forEach(l => {
                         saveBtn.removeEventListener(l);
                     })
                     const listener = () => {
+                        document.getElementById("productDescription").value = quill.root.innerHTML
                         fetch(`/updateProduct/${product.id}`, {
                             method: "PUT",
                             headers: { 
@@ -154,7 +237,8 @@ document.addEventListener("DOMContentLoaded", function() {
                                 name: document.getElementById("productName").value,
                                 description: document.getElementById("productDescription").value,
                                 image_url: document.getElementById("productImage").value,
-                                price: document.getElementById("productPrice").value
+                                price: document.getElementById("productPrice").value,
+                                fields: JSON.stringify(readFieldsFromContainer(document.getElementById("productFieldsContainer")))
                             })
                         }).then((r) => {
                             if (r.ok) {
@@ -215,7 +299,13 @@ document.addEventListener("DOMContentLoaded", function() {
         listeners.forEach(l => {
             saveBtn.removeEventListener(l);
         })
+
+        const fieldsContainer = document.getElementById("productFieldsContainer")
+        renderFields(fieldsContainer, [])
+        document.getElementById("productFields").value = JSON.stringify([])
+
         const listener = () => {
+            document.getElementById("productDescription").value = quill.root.innerHTML
             fetch(`/addProduct`, {
                 method: "POST",
                 headers: { 
@@ -226,7 +316,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     name: document.getElementById("productName").value,
                     description: document.getElementById("productDescription").value,
                     image_url: document.getElementById("productImage").value,
-                    price: document.getElementById("productPrice").value
+                    price: document.getElementById("productPrice").value,
+                    fields: JSON.stringify(readFieldsFromContainer(document.getElementById("productFieldsContainer")))
                 })
             }).then((r) => {
                 if (r.ok) {
@@ -238,4 +329,12 @@ document.addEventListener("DOMContentLoaded", function() {
         saveBtn.addEventListener("click", listener);
         listeners.push(listener);
     });
+
+    document.getElementById("addFieldBtn").addEventListener("click", () => {
+        const container = document.getElementById("productFieldsContainer")
+        // append an empty field row
+        const fields = readFieldsFromContainer(container)
+        fields.push({ label: "", value: "" })
+        renderFields(container, fields)
+    })
 });

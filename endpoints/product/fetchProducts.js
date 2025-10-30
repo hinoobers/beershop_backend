@@ -18,13 +18,13 @@ module.exports = async (req, res) => {
         if (currency !== 'USD') {
             const convertedResults = await Promise.all(results.map(async (product) => {
                 const convertedPrice = await convert(product.price, currency);
-                return { ...product, price: { total: parseFloat(convertedPrice.toFixed(2)), currency: currencyMap[currency] || currency } };
+                return { ...product, price: { total: parseFloat(convertedPrice.toFixed(2)), currency: currencyMap[currency] || currency, text: currencyMap[currency] == "$" ? "${price}" : "{price}" + currencyMap[currency] } };
             }));
             res.json({ data: convertedResults, total });
             return;
         }
 
-        res.json({ data: results.map(product => ({ ...product, price: { total: parseFloat(product.price.toFixed(2)), currency: '$' } })), total });
+        res.json({ data: results.map(product => ({ ...product, price: { total: parseFloat(product.price.toFixed(2)), currency: '$', text: "${price}" } })), total });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Internal Server Error" });

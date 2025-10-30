@@ -38,7 +38,7 @@
         let products = [];
         let cart = [];
 
-        fetch("fetchProducts?currency=" + localStorage.getItem('selectedCurrency'), { method: "GET",
+        fetch("fetchProducts?currency=" + (localStorage.getItem('selectedCurrency') || 'USD'), { method: "GET",
             headers: {
                 "Content-Type": "application/json"
             }
@@ -62,7 +62,7 @@
                 currencySymbol = product.price.currency;
                 const li = document.createElement('li');
                 li.innerHTML = `
-                    ${product.name} x${item.qty} - ${product.price.currency}${(product.price.total * item.qty).toFixed(2)}
+                    ${product.name} x${item.qty} - ${product.price.text.replace("{price}", (product.price.total * item.qty).toFixed(2))}
                     <div class='h'>
                         <button onclick="addToCart(${item.productId})">+</button>
                         <button onclick="removeFromCart(${item.productId})">-</button>
@@ -86,7 +86,7 @@
                 div.innerHTML = `
                     <img src="${product.image_url}" alt="${product.name}">
                     <h3>${product.name}</h3>
-                    <p>${product.price.currency + "" + product.price.total}</p>
+                    <p>${product.price.text.replace("{price}", product.price.total)}</p>
                     <div class="actions">
                         <button onclick="addToCart(${product.id})">Add to Cart</button>
                         <button onclick="window.location.href='/productPage.html?id=${product.id}'">View info</button>

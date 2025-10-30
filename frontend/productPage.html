@@ -23,6 +23,12 @@
                 </p>
                 <div class="product-price" id="product-price">$49.99</div>
                 <button class="btn-primary" id="add-cart">Add to Cart</button>
+                <div class="product-fields">
+                     <div class="product-field">
+                        <span class="label">Loading...</span>
+                        <span class="value">Loading...</span>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
@@ -39,17 +45,47 @@
 
             localStorage.setItem("cart", JSON.stringify(cart));
         }
+
         fetch("/fetchProduct/" + new URLSearchParams(document.location.search).get("id"), {
             method: "GET"
-        }).then(d => d.json()).then(d => {
+        }).then(response => {
+            if (response.status === 404) {
+                window.location.href = "404.html";
+            }
+            return response.json();
+        }).then(d => {
             document.getElementById("product-image").src = d.image_url
             document.getElementById("product-title").textContent = d.name
-            document.getElementById("product-desc").textContent = d.description
+            document.getElementById("product-desc").innerHTML = d.description
             document.getElementById("product-price").textContent = d.price + "$"
             document.getElementById("add-cart").addEventListener("click", () => {
                 addToCart(d)
                 window.location.href = "index.html"
             });
+
+            const fields = JSON.parse(d.fields);
+            const fieldsContainer = document.querySelector(".product-fields");
+            fieldsContainer.innerHTML = "";
+            fields.forEach(field => {
+                const fieldDiv = document.createElement("div");
+                fieldDiv.className = "product-field";
+                const labelSpan = document.createElement("span");
+                labelSpan.className = "label";
+                labelSpan.textContent = field.label + ":";
+                const valueSpan = document.createElement("span");
+                valueSpan.className = "value";
+                valueSpan.textContent = field.value;
+                fieldDiv.appendChild(labelSpan);
+                fieldDiv.appendChild(valueSpan);
+                fieldsContainer.appendChild(fieldDiv);
+            });
+        }).catch(err => {
+            console.log(err);
+            if (err.message === 'Product not found') {
+                console.log("Product not found");
+            } else {
+                alert("An error occurred while fetching the product details.");
+            }
         })
     </script>
 </body>

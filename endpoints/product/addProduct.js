@@ -8,9 +8,9 @@ module.exports = (req, res) => {
         return;
     }
 
-    const {name, description, image_url, price} = req.body;
+    const {name, description, image_url, price, fields} = req.body;
 
-    pool.query("INSERT INTO products (name, description, image_url, price) VALUES (?, ?, ?, ?)", [name, description, image_url, price], (error, results) => {
+    pool.query("INSERT INTO products (name, description, image_url, price, fields) VALUES (?, ?, ?, ?, ?)", [name, description, image_url, price, fields], (error, results) => {
         if (error) {
             console.error(error);
             res.status(500).json({ error: "Internal Server Error" });

@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "NotoZnamennyMusicalNotation";
+  src: url("./NotoZnamennyMusicalNotation-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -48,9 +56,12 @@ header a:hover {
 }
 
 .product:hover {
-    transform: perspective(600px) rotateY(10deg) scale(1.05);
+    transform-style: preserve-3d;
+    transform: perspective(600px) 
+        rotateY(calc((var(--x, 0) - 50) * 0.2deg))
+        rotateX(calc((var(--y, 0) - 50) * -0.2deg))
+        scale(1.05);
     box-shadow: 0 12px 24px rgba(0,0,0,0.18), 0 1.5px 6px rgba(0,0,0,0.12);
-    transition: transform 0.3s cubic-bezier(.25,.8,.25,1), box-shadow 0.3s cubic-bezier(.25,.8,.25,1);
 }
 
 
@@ -115,6 +126,11 @@ header a:hover {
     padding: 0.3em 0.7em;
     border-radius: 4px;
     cursor: pointer;
+    font-size: 15px;
+}
+
+.cart-list button:hover {
+    background: #c62828;
 }
 
 .checkout-btn,
@@ -127,6 +143,7 @@ header a:hover {
     padding: 0.7em 1.5em;
     border-radius: 4px;
     cursor: pointer;
+    font-weight: bold;
 }
 
 .checkout-btn {
@@ -160,4 +177,42 @@ header select:focus {
 header select option {
     background: #fff;
     color: #333;
+}
+
+.product-fields {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  border-collapse: collapse;
+  margin-top: 20px; /* Added margin for spacing */
+}
+
+.product-field {
+  width: 100%;
+  padding: 15px 20px;
+  box-sizing: border-box;
+  font-size: 0.87rem;
+  font-family: "NotoZnamennyMusicalNotation";
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.product-field:nth-child(odd) {
+  background-color: #e4e4e4;
+}
+
+.product-field:nth-child(even) {
+  background-color: #ffffff;
+}
+
+.label {
+  font-weight: bold;
+  color: #4a4a4a;
+  letter-spacing: 0.5px;
+}
+
+.value {
+  color: #000000;
+  font-weight: 600;
 }
