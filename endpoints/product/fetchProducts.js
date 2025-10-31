@@ -5,6 +5,10 @@ module.exports = async (req, res) => {
     const currency = req.query.currency || 'USD';
     const currencyMap = {'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'AUD': 'A$', 'CAD': 'C$', 'CHF': 'CHF', 'CNY': '¥', 'SEK': 'kr', 'NZD': 'NZ$'};
 
+    if(!currencyMap[currency]) {
+        return res.status(400).json({ error: "Unsupported currency" });
+    }
+    
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;

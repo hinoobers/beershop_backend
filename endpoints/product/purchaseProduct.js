@@ -10,6 +10,8 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: "Missing products array" });
     }
 
+
+
     const getProductById = (productId) => {
         return new Promise((resolve, reject) => {
             pool.query("SELECT * FROM products WHERE id=?", [productId], (error, results) => {

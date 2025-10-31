@@ -4,26 +4,41 @@
     <meta charset="UTF-8">
     <title>Beer shop</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/productPage.css">
+    <script src="scripts/global.js" defer></script>
 </head>
 <body>
    <header>
        <h1><a href="index.html">Beer Shop</a></h1>
+        <select id="currency-select" onchange="changeCurrency()">
+            <option value="EUR" tag="€">EUR (€)</option>
+            <option value="USD" tag="$">USD ($)</option>
+            <option value="GBP" tag="£">GBP (£)</option>
+        </select>
     </header>
 
     <main class="container">
+        <a class="back-link" href="index.html" aria-label="Back to list">← Back to products</a>
+
         <section class="product-details">
             <div class="product-image">
-                <img id="product-image" width="400" height="300" alt="Product Name">
+                <img id="product-image" width="400" height="300" alt="Product image placeholder">
             </div>
+
             <div class="product-info">
                 <h2 class="product-title" id="product-title">Product Name</h2>
+                <div class="product-meta">
+                    <div class="product-price" id="product-price">$49.99</div>
+                    <div class="product-actions">
+                        <button class="btn-primary" id="add-cart">Add to Cart</button>
+                    </div>
+                </div>
+
                 <p class="product-description" id="product-desc">
                     This is a detailed description of the product. It highlights features, benefits, and specifications.
                 </p>
-                <div class="product-price" id="product-price">$49.99</div>
-                <button class="btn-primary" id="add-cart">Add to Cart</button>
-                <div class="product-fields">
+
+                <div class="product-fields" aria-live="polite">
                      <div class="product-field">
                         <span class="label">Loading...</span>
                         <span class="value">Loading...</span>
@@ -46,7 +61,7 @@
             localStorage.setItem("cart", JSON.stringify(cart));
         }
 
-        fetch("/fetchProduct/" + new URLSearchParams(document.location.search).get("id"), {
+        fetch("/fetchProduct/" + new URLSearchParams(document.location.search).get("id") + "?currency=" + localStorage.getItem('selectedCurrency'), {
             method: "GET"
         }).then(response => {
             if (response.status === 404) {
@@ -54,31 +69,48 @@
             }
             return response.json();
         }).then(d => {
-            document.getElementById("product-image").src = d.image_url
-            document.getElementById("product-title").textContent = d.name
-            document.getElementById("product-desc").innerHTML = d.description
-            document.getElementById("product-price").textContent = d.price + "$"
+            document.getElementById("product-image").src = d.image_url || "css/placeholder.png";
+            document.getElementById("product-image").alt = d.name || "Product image";
+            document.getElementById("product-title").textContent = d.name;
+            document.getElementById("product-desc").innerHTML = d.description;
+            document.getElementById("product-price").textContent = d.price.text.replace("{price}", d.price.total);
             document.getElementById("add-cart").addEventListener("click", () => {
-                addToCart(d)
-                window.location.href = "index.html"
+                addToCart(d);
+                // small visual confirmation then back to list
+                document.getElementById("add-cart").textContent = "Added ✓";
+                setTimeout(() => window.location.href = "index.html", 600);
             });
 
-            const fields = JSON.parse(d.fields);
+            const fields = JSON.parse(d.fields || "[]");
             const fieldsContainer = document.querySelector(".product-fields");
             fieldsContainer.innerHTML = "";
-            fields.forEach(field => {
-                const fieldDiv = document.createElement("div");
-                fieldDiv.className = "product-field";
+            if (fields.length === 0) {
+                const empty = document.createElement("div");
+                empty.className = "product-field";
                 const labelSpan = document.createElement("span");
                 labelSpan.className = "label";
-                labelSpan.textContent = field.label + ":";
+                labelSpan.textContent = "Details:";
                 const valueSpan = document.createElement("span");
                 valueSpan.className = "value";
-                valueSpan.textContent = field.value;
-                fieldDiv.appendChild(labelSpan);
-                fieldDiv.appendChild(valueSpan);
-                fieldsContainer.appendChild(fieldDiv);
-            });
+                valueSpan.textContent = "No additional details.";
+                empty.appendChild(labelSpan);
+                empty.appendChild(valueSpan);
+                fieldsContainer.appendChild(empty);
+            } else {
+                fields.forEach(field => {
+                    const fieldDiv = document.createElement("div");
+                    fieldDiv.className = "product-field";
+                    const labelSpan = document.createElement("span");
+                    labelSpan.className = "label";
+                    labelSpan.textContent = field.label + ":";
+                    const valueSpan = document.createElement("span");
+                    valueSpan.className = "value";
+                    valueSpan.textContent = field.value;
+                    fieldDiv.appendChild(labelSpan);
+                    fieldDiv.appendChild(valueSpan);
+                    fieldsContainer.appendChild(fieldDiv);
+                });
+            }
         }).catch(err => {
             console.log(err);
             if (err.message === 'Product not found') {

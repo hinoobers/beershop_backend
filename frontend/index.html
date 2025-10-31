@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8" />
     <title>Beer Shop</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="scripts/global.js" defer></script>
 </head>
 <body>
@@ -19,93 +20,122 @@
             <a href="admin.html">Admin?</a>
         </div>
     </header>
-    <div class="container">
-        <section>
-            <h2>Products</h2>
-            <div class="products" id="products"></div>
+
+    <main class="container layout">
+        <section class="products-section">
+            <div class="section-header">
+                <h2>Products</h2>
+                <div class="controls">
+                    <label class="small-muted" for="sort-select">Sort</label>
+                    <select id="sort-select" onchange="renderProducts()">
+                        <option value="default">Recommended</option>
+                        <option value="price-asc">Price ↑</option>
+                        <option value="price-desc">Price ↓</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="products" class="products" aria-live="polite"></div>
         </section>
-        <section class="cart">
-            <h2>Cart</h2>
-            <ul class="cart-list" id="cart-list"></ul>
-            <div class="total" id="cart-total"></div>
-            <button id="checkout-stripe-btn" class="checkout-btn">Checkout via Stripe</button>
-            <button id="checkout-paypal-btn" class="checkout-btn">Checkout via PayPal</button>
-        </section>
-    </div>
+
+        <aside class="cart" id="cart" aria-labelledby="cart-heading">
+            <h2 id="cart-heading">Cart</h2>
+            <ul class="cart-list" id="cart-list" aria-live="polite"></ul>
+
+            <div class="cart-footer">
+                <div class="total" id="cart-total">Total: —</div>
+
+                <div class="checkout-actions">
+                    <button id="checkout-stripe-btn" class="checkout-btn stripe" aria-label="Checkout with Stripe" title="Stripe">
+                        <i id="stripe" class="fab fa-cc-stripe" aria-hidden="true"></i>
+                    </button>
+
+                    <button id="checkout-paypal-btn" class="checkout-btn paypal" aria-label="Checkout with PayPal" title="PayPal">
+                        <i id="paypal" class="fab fa-cc-paypal" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+                <button id="clear-cart" class="link-btn">Clear cart</button>
+            </div>
+        </aside>
+    </main>
+
     <script>
+        // ...existing code...
         const checkoutStripeBtn = document.getElementById('checkout-stripe-btn');
         const checkoutPaypalBtn = document.getElementById('checkout-paypal-btn');
+        const clearCartBtn = document.getElementById('clear-cart');
         let products = [];
         let cart = [];
 
-        fetch("fetchProducts?currency=" + (localStorage.getItem('selectedCurrency') || 'USD'), { method: "GET",
-            headers: {
-                "Content-Type": "application/json"
-            }
-         })
+        function loadProducts() {
+            const selectedCurrency = localStorage.getItem('selectedCurrency') || 'USD';
+            fetch("fetchProducts?currency=" + selectedCurrency, {
+                method: "GET",
+                headers: { "Content-Type": "application/json" }
+            })
             .then(response => response.json())
             .then(data => {
-                products = data.data;
+                products = data.data || [];
                 renderProducts();
                 renderCart();
+            })
+            .catch(err => {
+                console.error("Failed to load products", err);
+                document.getElementById('products').innerHTML = '<p class="error">Unable to load products.</p>';
             });
-
-        function renderCart() {
-            const cartList = document.getElementById('cart-list');
-            cartList.innerHTML = '';
-            let total = 0;
-            let currencySymbol = '';
-            cart.forEach(item => {
-                const product = products.find(p => p.id === item.productId);
-                console.log(product);
-                total += product.price.total * item.qty;
-                currencySymbol = product.price.currency;
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    ${product.name} x${item.qty} - ${product.price.text.replace("{price}", (product.price.total * item.qty).toFixed(2))}
-                    <div class='h'>
-                        <button onclick="addToCart(${item.productId})">+</button>
-                        <button onclick="removeFromCart(${item.productId})">-</button>
-                    </div>
-                `;
-                cartList.appendChild(li);
-            });
-            document.getElementById('cart-total').textContent = `Total: ${currencySymbol}${total.toFixed(2)}`;
-            if (cart.length > 0) {
-                Array.from(document.getElementsByClassName('checkout-btn')).forEach(btn => btn.style.display = 'block');
-            }
-            saveCart();
         }
 
         function renderProducts() {
             const productsDiv = document.getElementById('products');
             productsDiv.innerHTML = '';
-            products.forEach(product => {
+
+            const sort = document.getElementById('sort-select')?.value;
+            let list = products.slice();
+            if (sort === 'price-asc') list.sort((a,b) => (a.price.total || 0) - (b.price.total || 0));
+            if (sort === 'price-desc') list.sort((a,b) => (b.price.total || 0) - (a.price.total || 0));
+
+            if (list.length === 0) {
+                productsDiv.innerHTML = '<div class="empty">No products available.</div>';
+                return;
+            }
+
+            list.forEach(product => {
                 const div = document.createElement('div');
                 div.className = 'product';
                 div.innerHTML = `
-                    <img src="${product.image_url}" alt="${product.name}">
-                    <h3>${product.name}</h3>
-                    <p>${product.price.text.replace("{price}", product.price.total)}</p>
-                    <div class="actions">
-                        <button onclick="addToCart(${product.id})">Add to Cart</button>
-                        <button onclick="window.location.href='/productPage.html?id=${product.id}'">View info</button>
+                    <div class="thumb">
+                        <img alt="${(product.name||'')}" src="${product.image_url || 'css/placeholder.png'}">
+                        <div class="price-badge">${product.price.text.replace("{price}", product.price.total)}</div>
+                    </div>
+                    <div class="product-body">
+                        <h3 class="prod-name">${product.name || ''}</h3>
+                        <p class="prod-desc">${(product.short_description || '').slice(0, 110)}</p>
+                        <div class="actions">
+                            <button class="btn-add" data-id="${product.id}">Add to Cart</button>
+                            <button class="btn-info" data-id="${product.id}">View info</button>
+                        </div>
                     </div>
                 `;
                 productsDiv.appendChild(div);
             });
+
+            Array.from(document.getElementsByClassName('btn-add')).forEach(btn => {
+                btn.addEventListener('click', (e) => addToCart(Number(e.currentTarget.dataset.id)));
+            });
+            Array.from(document.getElementsByClassName('btn-info')).forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = Number(e.currentTarget.dataset.id);
+                    window.location.href = '/productPage.html?id=' + id;
+                });
+            });
         }
 
         function addToCart(productId) {
-            console.log("Add to cart called!")
-            Array.from(document.getElementsByClassName('checkout-btn')).forEach(btn => btn.style.display = 'block');
+            Array.from(document.getElementsByClassName('checkout-btn')).forEach(btn => btn.style.display = 'flex');
             const item = cart.find(i => i.productId === productId);
-            if (item) {
-                item.qty += 1;
-            } else {
-                const product = products.find(p => p.id === productId);
-                cart.push({ productId: productId, qty: 1 });
-            }
+            if (item) { item.qty += 1; }
+            else { cart.push({ productId: productId, qty: 1 }); }
             renderCart();
         }
 
@@ -113,9 +143,7 @@
             const item = cart.find(i => i.productId === productId);
             if (item) {
                 item.qty -= 1;
-                if (item.qty <= 0) {
-                    cart = cart.filter(i => i.productId !== productId);
-                }
+                if (item.qty <= 0) cart = cart.filter(i => i.productId !== productId);
             }
             if (cart.length === 0) {
                 Array.from(document.getElementsByClassName('checkout-btn')).forEach(btn => btn.style.display = 'none');
@@ -123,47 +151,90 @@
             renderCart();
         }
 
-        const checkoutlistener = (e) => {
+        function renderCart() {
+            const cartList = document.getElementById('cart-list');
+            cartList.innerHTML = '';
+            let total = 0;
+            let template;
+            cart.forEach(item => {
+                const product = products.find(p => p.id === item.productId) || {};
+                const price = (product.price && product.price.total) ? product.price.total : 0;
+                total += price * item.qty;
+
+                const li = document.createElement('li');
+                li.className = 'cart-item';
+                li.innerHTML = `
+                    <div class="cart-left">
+                        <div class="cart-title">${product.name || 'Unknown'}</div>
+                        <div class="cart-meta">${(product.price.text.replace("{price}", (price * item.qty).toFixed(2)))}</div>
+                    </div>
+                    <div class="cart-qty">
+                        <button class="qty-btn" data-id="${item.productId}" data-op="dec">−</button>
+                        <span class="qty">${item.qty}</span>
+                        <button class="qty-btn" data-id="${item.productId}" data-op="inc">+</button>
+                    </div>
+                `;
+                cartList.appendChild(li);
+
+                // grab first template
+                if (!template) template = product.price.text;
+            });
+            document.getElementById('cart-total').textContent = `Total: ${template.replace("{price}", total.toFixed(2))}`;
+            if (cart.length > 0) {
+                Array.from(document.getElementsByClassName('checkout-btn')).forEach(btn => btn.style.display = 'flex');
+            } else {
+                Array.from(document.getElementsByClassName('checkout-btn')).forEach(btn => btn.style.display = 'none');
+            }
+
+            Array.from(document.getElementsByClassName('qty-btn')).forEach(b => {
+                b.addEventListener('click', (e) => {
+                    const id = Number(e.currentTarget.dataset.id);
+                    const op = e.currentTarget.dataset.op;
+                    if (op === 'inc') addToCart(id);
+                    else removeFromCart(id);
+                });
+            });
+
+            saveCart();
+        }
+
+        const checkoutlistener = (event) => {
             if(cart.length === 0) {
                 alert("Your cart is empty!");
-            } else {
-                fetch("purchaseProduct", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({products: cart, paymentMethod: e.target.id === 'checkout-stripe-btn' ? 'stripe' : 'paypal'})
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.url) {
-                        window.location.href = data.url;
-                    } else {
-                        if(data.error) {
-                            alert("Purchase failed: " + data.error);
-                            return;
-                        }
-                        alert("Purchase failed.");
-                    }
-                });
+                return;
             }
+            console.log(event.target.id);
+            fetch("purchaseProduct", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({products: cart, paymentMethod: event.target.id === 'stripe' ? 'stripe' : 'paypal'})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.url) window.location.href = data.url;
+                else alert(data.error ? ("Purchase failed: " + data.error) : "Purchase failed.");
+            });
         }
 
         checkoutStripeBtn.addEventListener("click", checkoutlistener);
         checkoutPaypalBtn.addEventListener("click", checkoutlistener);
 
-        let savedCart = localStorage.getItem('cart');
-        if (savedCart) {
-            cart = JSON.parse(savedCart);
-        } else {
-            cart = [];
-        }
-        function saveCart() {
-            localStorage.setItem('cart', JSON.stringify(cart));
-        }
+        clearCartBtn.addEventListener("click", () => {
+            if (confirm('Clear cart?')) {
+                cart = [];
+                renderCart();
+            }
+        });
 
-        renderProducts();
-        renderCart();
+        let savedCart = localStorage.getItem('cart');
+        if (savedCart) cart = JSON.parse(savedCart);
+        else cart = [];
+
+        function saveCart() { localStorage.setItem('cart', JSON.stringify(cart)); }
+
+        // initial load
+        loadProducts();
+        // ...existing code...
     </script>
 </body>
 </html>
