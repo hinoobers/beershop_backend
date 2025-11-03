@@ -33,6 +33,7 @@ app.post("/login", require("./endpoints/login.js").login);
 
 app.listen(3001, () => {
     console.log("Bäckend jookseb pordi 3000 peal!")
+    require("./util/emailer.js").sendEmail("hasta1pasta@gmail.com", "test", "test");
     pool.query("SELECT * FROM products", (error, results) => {
         if (error) {
             console.error("Viga päringu täitmisel:", error);

@@ -65,17 +65,25 @@ document.addEventListener("DOMContentLoaded", function() {
             const row = ordersTable.insertRow();
             row.insertCell(0).innerText = order.order_id;
             let products = JSON.parse(order.products).map(item => `${item.name} x${item.quantity}`).join(", ");
-            const address = JSON.parse(order.address);
-            row.insertCell(1).innerText = products;
-            row.insertCell(2).innerText =
-                (address.country || address.country_code) + ", " +
-                (address.state ? "State: " + address.state + ", " : "") +
-                "City: " + address.city + ", " +
-                address.line1.trim() + (address.line2 ? address.line2.trim() : "") +
-                ", ZIP: " + address.postal_code;
-            row.insertCell(3).innerText = (order.status === 0) ? "Pending" : "Done";
+            let x = 0;
+            try {
+                const address = JSON.parse(order.address);
+                row.insertCell(1).innerText = products;
+                row.insertCell(2).innerText =
+                    (address.country || address.country_code) + ", " +
+                    (address.state ? "State: " + address.state + ", " : "") +
+                    "City: " + address.city + ", " +
+                    address.line1.trim() + (address.line2 ? address.line2.trim() : "") +
+                    ", ZIP: " + address.postal_code;
+                row.insertCell(3).innerText = (order.status === 0) ? "Pending" : "Done";
+                x = 4;
+            } catch (e) {
+                row.insertCell(1).innerText = `Error parsing products/address`;
+                x = 2;
+            }
 
-            const actionCell = row.insertCell(4);
+
+            const actionCell = row.insertCell(x);
             const doneButton = document.createElement("button");
             doneButton.classList.add("btn");
             doneButton.innerText = "Mark as Done";
@@ -237,8 +245,8 @@ document.addEventListener("DOMContentLoaded", function() {
                                 name: document.getElementById("productName").value,
                                 description: document.getElementById("productDescription").value,
                                 image_url: document.getElementById("productImage").value,
-                                price: document.getElementById("productPrice").value,
-                                fields: JSON.stringify(readFieldsFromContainer(document.getElementById("productFieldsContainer")))
+                                price: parseFloat(document.getElementById("productPrice").value),
+                                fields: readFieldsFromContainer(document.getElementById("productFieldsContainer"))
                             })
                         }).then((r) => {
                             if (r.ok) {
@@ -295,7 +303,16 @@ document.addEventListener("DOMContentLoaded", function() {
         const modal = document.getElementById("productModal");
         modal.classList.add("active");
 
-        const saveBtn =document.getElementById("submitProductBtn");
+        // clear
+        document.getElementById("productName").value = "";
+        document.getElementById("productDescription").value = "";
+        document.getElementById("productImage").value = "";
+        document.getElementById("productPrice").value = "";
+        document.getElementById("productFields").value = JSON.stringify([]);
+        renderFields(document.getElementById("productFieldsContainer"), []);
+        quill.root.innerHTML = "";
+
+        const saveBtn = document.getElementById("submitProductBtn");
         listeners.forEach(l => {
             saveBtn.removeEventListener(l);
         })
@@ -316,8 +333,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     name: document.getElementById("productName").value,
                     description: document.getElementById("productDescription").value,
                     image_url: document.getElementById("productImage").value,
-                    price: document.getElementById("productPrice").value,
-                    fields: JSON.stringify(readFieldsFromContainer(document.getElementById("productFieldsContainer")))
+                    price: parseFloat(document.getElementById("productPrice").value),
+                    fields: readFieldsFromContainer(document.getElementById("productFieldsContainer"))
                 })
             }).then((r) => {
                 if (r.ok) {

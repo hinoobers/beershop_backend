@@ -55,8 +55,8 @@ module.exports = async (req, res) => {
                 "payment_method": "paypal"
             },
             "redirect_urls": {
-                "return_url": "http://localhost:3001/afterPayment",
-                "cancel_url": "http://localhost:3001/"
+                "return_url": "http://192.168.33.150:3001/afterPayment",
+                "cancel_url": "http://192.168.33.150:3001/"
             },
             "transactions": [{
                 "item_list": {
@@ -124,8 +124,8 @@ module.exports = async (req, res) => {
             },
             line_items,
             mode: 'payment',
-            success_url: 'http://localhost:3001/afterPayment?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url: 'http://localhost:3001',
+            success_url: 'http://192.168.33.150:3001/afterPayment?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url: 'http://192.168.33.150:3001',
         });
 
         res.json({ url: session.url });

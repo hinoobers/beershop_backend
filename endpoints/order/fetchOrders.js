@@ -17,6 +17,7 @@ module.exports = async (req, res) => {
         const total = countRows[0].count;
 
         const [results] = await pool.promise().query("SELECT * FROM orders ORDER BY order_id ASC LIMIT ? OFFSET ?", [limit, offset]);
+        console.log(results);
         res.json({ data: results, total });
     } catch (error) {
         console.error(error);

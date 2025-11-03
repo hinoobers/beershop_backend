@@ -16,6 +16,7 @@ module.exports = (req, res) => {
     }
     
     if(typeof price !== 'number' || price < 0) {
+        console.log(typeof price);
         res.status(400).json({ error: "Bad Request: Price must be a non-negative number" });
         return;
     }
@@ -30,7 +31,7 @@ module.exports = (req, res) => {
         return;
     }
 
-    pool.query("UPDATE products SET name=?, description=?, image_url=?, price=?, fields=? WHERE id=?", [name, description, image_url, price, fields, req.params.id], (error, results) => {
+    pool.query("UPDATE products SET name=?, description=?, image_url=?, price=?, fields=? WHERE id=?", [name, description, image_url, price, JSON.stringify(fields), req.params.id], (error, results) => {
         if (error) {
             console.error(error);
             res.status(500).json({ error: "Internal Server Error" });

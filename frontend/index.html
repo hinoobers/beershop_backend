@@ -179,6 +179,9 @@
                 // grab first template
                 if (!template) template = product.price.text;
             });
+            if(!template) {
+                template = "{price}EUR";
+            }
             document.getElementById('cart-total').textContent = `Total: ${template.replace("{price}", total.toFixed(2))}`;
             if (cart.length > 0) {
                 Array.from(document.getElementsByClassName('checkout-btn')).forEach(btn => btn.style.display = 'flex');

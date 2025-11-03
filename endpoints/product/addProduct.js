@@ -10,7 +10,12 @@ module.exports = (req, res) => {
 
     const {name, description, image_url, price, fields} = req.body;
 
-    pool.query("INSERT INTO products (name, description, image_url, price, fields) VALUES (?, ?, ?, ?, ?)", [name, description, image_url, price, fields], (error, results) => {
+    if(!Array.isArray(fields)) {
+        res.status(400).json({ error: "Bad Request: Fields must be an array" });
+        return;
+    }
+
+    pool.query("INSERT INTO products (name, description, image_url, price, fields) VALUES (?, ?, ?, ?, ?)", [name, description, image_url, price, JSON.stringify(fields)], (error, results) => {
         if (error) {
             console.error(error);
             res.status(500).json({ error: "Internal Server Error" });
